@@ -43,13 +43,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const devices = await navigator.mediaDevices.enumerateDevices();
             const videoInputs = devices.filter(device => device.kind === 'videoinput');
             if (videoInputs.length > 1) {
+                console.log('Multiple cameras detected. Showing switch button.');
                 switchCameraBtn.style.display = 'inline-flex';
             }
         } catch (error) {
             console.error("Could not enumerate devices:", error);
         }
     };
-    checkForMultipleCameras();
+    // We no longer call this on page load. It will be called after the camera starts.
 
     // --- Core MediaPipe Functions ---
     function initializeHands() {
@@ -190,6 +191,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
                 if (!hands) initializeHands();
+                
+                // *** CHANGE: Check for cameras AFTER permission is granted ***
+                checkForMultipleCameras();
+
                 isDetecting = true;
                 detectFrame();
                 stopBtn.disabled = false;
@@ -202,7 +207,8 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         } catch (error) {
             console.error('Error accessing camera:', error);
-            alert(`Unable to access camera. Error: ${error.message}`);
+            // *** CHANGE: More helpful error message ***
+            alert(`Unable to access camera. Please check site permissions. If using Brave, you may need to lower your Shields for this site. Error: ${error.message}`);
             startBtn.disabled = false;
             startBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Start Camera`;
         }
@@ -251,6 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (text && 'speechSynthesis' in window) speechSynthesis.speak(new SpeechSynthesisUtterance(text));
     };
 
+-
     // --- Utility Functions ---
     function startSessionTimer() {
         if (sessionTimerInterval) clearInterval(sessionTimerInterval);
@@ -294,4 +301,3 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     document.head.appendChild(style);
 });
-
